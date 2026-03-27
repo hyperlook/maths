@@ -124,11 +124,13 @@
 
         input[type=range] {
             -webkit-appearance: none;
+            appearance: none;
             width: 100%;
             background: transparent;
         }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none;
+            appearance: none;
             height: 20px;
             width: 20px;
             border-radius: 50%;
@@ -355,6 +357,14 @@
                 <input type="range" id="black-point" min="0" max="100" value="0">
                 <span style="font-size: 12px; color: #9CA3AF; margin-top: 6px;">值越高，字体的颜色和黑度越深</span>
             </div>
+            <div class="control-group">
+                <label>
+                    <span>内容缩放 (页边距)</span>
+                    <span class="slider-val" id="zoom-val">90%</span>
+                </label>
+                <input type="range" id="content-zoom" min="50" max="100" value="90">
+                <span style="font-size: 12px; color: #9CA3AF; margin-top: 6px;">减小缩放可增加留白，防止内容贴边</span>
+            </div>
             
             <label class="smart-toggle-box">
                 <input type="checkbox" id="smart-protect" checked>
@@ -394,8 +404,10 @@
         
         const whitePoint = document.getElementById('white-point');
         const blackPoint = document.getElementById('black-point');
+        const contentZoom = document.getElementById('content-zoom');
         const whiteVal = document.getElementById('white-val');
         const blackVal = document.getElementById('black-val');
+        const zoomVal = document.getElementById('zoom-val');
         const smartProtect = document.getElementById('smart-protect');
         
         let currentImage = null; 
@@ -424,6 +436,10 @@
         blackPoint.addEventListener('input', () => {
             blackVal.textContent = blackPoint.value;
             triggerProcess();
+        });
+        contentZoom.addEventListener('input', () => {
+            zoomVal.textContent = contentZoom.value + '%';
+            renderSlices();
         });
         smartProtect.addEventListener('change', triggerProcess);
 
@@ -662,9 +678,21 @@
             if (!window.processedCanvas) return;
             const canvas = window.processedCanvas;
             const sliceHeight = window.defaultSliceHeight;
+            const zoom = parseInt(document.getElementById('content-zoom').value) / 100;
 
             slicesPreview.innerHTML = '';
             printContainer.innerHTML = '';
+
+            // 预计算总页数
+            let totalPages = 0;
+            let ty = 0;
+            while (ty < canvas.height) {
+                let offset = window.cutOffsets[totalPages] || 0;
+                let contentHeight = sliceHeight - offset;
+                let sh = Math.min(contentHeight, canvas.height - ty);
+                ty += sh;
+                totalPages++;
+            }
 
             let currentY = 0;
             let pageIndex = 0;
@@ -683,11 +711,28 @@
                 sCtx.fillStyle = '#FFFFFF';
                 sCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
 
+                // 缩放计算
+                const drawW = sliceCanvas.width * zoom;
+                const drawH = sh * zoom;
+                const dx = (sliceCanvas.width - drawW) / 2;
+                const dy = (sliceHeight - drawH) / 2;
+
                 sCtx.drawImage(
                     canvas, 
                     0, currentY, canvas.width, sh, 
-                    0, 0, sliceCanvas.width, sh
+                    dx, dy, drawW, drawH
                 );
+
+                // 绘制漂亮的页码
+                sCtx.fillStyle = '#94A3B8'; // 优雅的灰蓝色
+                const fontSize = Math.max(12, Math.floor(sliceCanvas.width * 0.025));
+                sCtx.font = `500 ${fontSize}px "Inter", system-ui, sans-serif`;
+                sCtx.textAlign = 'center';
+                const pageText = `—  ${pageIndex + 1}  /  ${totalPages}  —`;
+                
+                // 页码位置：底部留白的中心
+                const pageNumY = sliceCanvas.height - (sliceCanvas.height * (1 - zoom) / 4);
+                sCtx.fillText(pageText, sliceCanvas.width / 2, pageNumY);
 
                 const dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.85);
 
