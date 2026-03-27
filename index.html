@@ -741,7 +741,8 @@
             let ty = 0;
             while (ty < canvas.height && totalPages < 1000) { // 防止死循环保护
                 let offset = window.cutOffsets[totalPages] || 0;
-                if (offset > safeOffsetLimit) offset = safeOffsetLimit;
+                let maxOfs = Math.min(600, sliceHeight - 200); 
+                if (offset > maxOfs) offset = maxOfs;
                 let contentHeight = sliceHeight - offset;
                 if (contentHeight < 100) contentHeight = 100;
                 
@@ -776,7 +777,7 @@
 
             while (currentY < canvas.height && pageIndex < 1000) {
                 let offset = window.cutOffsets[pageIndex] || 0;
-                let maxOffset = Math.max(0, sliceHeight - 200); 
+                let maxOffset = Math.min(600, sliceHeight - 200); 
                 
                 if (offset > maxOffset) offset = maxOffset;
                 if (offset < 0) offset = 0;
