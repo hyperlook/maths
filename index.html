@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>黑板截长图打印神器</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 8px;
+            color: #111827;
+        }
+        
+        p.subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 30px;
+        }
+
+        /* 拖拽上传区 */
+        .drop-zone {
+            border: 2px dashed #D1D5DB;
+            border-radius: 12px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background-color: #F9FAFB;
+            margin-bottom: 30px;
+        }
+
+        .drop-zone:hover, .drop-zone.dragover {
+            border-color: var(--primary);
+            background-color: #EEF2FF;
+        }
+
+        .drop-zone svg {
+            width: 48px;
+            height: 48px;
+            color: #9CA3AF;
+            margin-bottom: 15px;
+        }
+
+        .drop-zone p {
+            font-size: 16px;
+            font-weight: 500;
+            color: #4B5563;
+        }
+
+        .drop-zone span {
+            font-size: 14px;
+            color: #9CA3AF;
+            display: block;
+            margin-top: 8px;
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* 控制区 */
+        .controls {
+            display: none; 
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+            background: #F8FAFC;
+            padding: 24px;
+            border-radius: 12px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-val {
+            color: var(--primary);
+        }
+
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #E5E7EB;
+            border-radius: 2px;
+        }
+
+        .smart-toggle-box {
+            grid-column: span 2;
+            display: flex;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #E5E7EB;
+            cursor: pointer;
+        }
+
+        .smart-toggle-box input {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+        
+        .smart-toggle-box label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #1F2937;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .smart-toggle-box label span {
+            font-size: 13px;
+            color: #6B7280;
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        .actions {
+            display: none; 
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: #374151;
+        }
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+
+        /* 预览区 */
+        .preview-section {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            border-top: 1px solid #E5E7EB;
+            padding-top: 30px;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: none;
+            margin: 20px 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        .preview-section h3 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        #slices-preview {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            background: #E5E7EB;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        #slices-preview img {
+            width: 100%;
+            max-width: 600px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: white;
+        }
+
+        .split-control {
+            background: #FFFBEB;
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            border: 1px dashed #FBBF24;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .btn-micro {
+            padding: 4px 8px;
+            font-size: 12px;
+            background: white;
+            border: 1px solid #D1D5DB;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #374151;
+            transition: all 0.2s;
+        }
+        .btn-micro:hover {
+            background: #F3F4F6;
+            border-color: #9CA3AF;
+        }
+
+        #print-container {
+            display: none;
+        }
+
+        /* 打印专用样式 */
+        @media print {
+            body * {
+                visibility: hidden;
+                display: none !important;
+            }
+            #print-container, #print-container * {
+                visibility: visible !important;
+                display: block !important;
+            }
+            #print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+            .print-page {
+                width: 100%;
+                height: auto;
+                page-break-after: always; /* 强制分页 */
+                margin: 0 !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+            @page {
+                size: A4;
+                margin: 0mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>黑板截长图打印神器</h1>
+        <p class="subtitle">专为暗黑背景、彩色手写字体的教学长图设计<br/>自动反色调白 ➔ 智能保护原白底框 ➔ 智能切分为A4尺寸 ➔ 一键直接打印</p>
+
+        <div class="drop-zone" id="drop-zone">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+            <p>点击或拖拽截图文件到此处</p>
+            <span>支持 PNG, JPG, WEBP</span>
+            <input type="file" id="file-input" accept="image/*">
+        </div>
+
+        <div class="controls" id="controls">
+            <div class="control-group">
+                <label>
+                    <span>背景增白 (过滤浅灰)</span>
+                    <span class="slider-val" id="white-val">200</span>
+                </label>
+                <input type="range" id="white-point" min="100" max="255" value="200">
+                <span style="font-size: 12px; color: #9CA3AF; margin-top: 6px;">值越低，深灰背景越容易变纯白(省墨)</span>
+            </div>
+            <div class="control-group">
+                <label>
+                    <span>文字加深 (过滤浅色)</span>
+                    <span class="slider-val" id="black-val">0</span>
+                </label>
+                <input type="range" id="black-point" min="0" max="100" value="0">
+                <span style="font-size: 12px; color: #9CA3AF; margin-top: 6px;">值越高，字体的颜色和黑度越深</span>
+            </div>
+            
+            <label class="smart-toggle-box">
+                <input type="checkbox" id="smart-protect" checked>
+                <label for="smart-protect">
+                    开启智能保护原白底区域
+                    <span>自动检测并保护截图中原本就是“白底黑字”的试卷框框，防止它们被错误反色变黑。</span>
+                </label>
+            </label>
+        </div>
+
+        <div class="actions" id="actions">
+            <button class="btn-primary" id="btn-print">预览并开启打印</button>
+            <button class="btn-secondary" id="btn-reselect">重新选择图片</button>
+        </div>
+
+        <div class="loading" id="loading">✨ 正在智能处理图片中...</div>
+
+        <div class="preview-section" id="preview-section">
+            <h3>处理效果预览 (已切分为A4纸张比例)</h3>
+            <div id="slices-preview"></div>
+        </div>
+
+    </div>
+
+    <!-- 打印专用的隐藏容器 -->
+    <div id="print-container"></div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const controls = document.getElementById('controls');
+        const actions = document.getElementById('actions');
+        const loading = document.getElementById('loading');
+        const previewSection = document.getElementById('preview-section');
+        const slicesPreview = document.getElementById('slices-preview');
+        const printContainer = document.getElementById('print-container');
+        
+        const whitePoint = document.getElementById('white-point');
+        const blackPoint = document.getElementById('black-point');
+        const whiteVal = document.getElementById('white-val');
+        const blackVal = document.getElementById('black-val');
+        const smartProtect = document.getElementById('smart-protect');
+        
+        let currentImage = null; 
+        let processTimeout = null;
+        window.cutOffsets = [];
+        window.processedCanvas = null;
+        window.defaultSliceHeight = 0;
+
+        // 滑动条实时变化（加个小防抖防止卡顿）
+        function triggerProcess() {
+            if(!currentImage) return;
+            loading.style.display = 'block';
+            slicesPreview.style.opacity = '0.3';
+            clearTimeout(processTimeout);
+            processTimeout = setTimeout(() => {
+                processImage();
+                loading.style.display = 'none';
+                slicesPreview.style.opacity = '1';
+            }, 50);
+        }
+
+        whitePoint.addEventListener('input', () => {
+            whiteVal.textContent = whitePoint.value;
+            triggerProcess();
+        });
+        blackPoint.addEventListener('input', () => {
+            blackVal.textContent = blackPoint.value;
+            triggerProcess();
+        });
+        smartProtect.addEventListener('change', triggerProcess);
+
+        document.getElementById('btn-reselect').addEventListener('click', () => {
+            fileInput.click();
+        });
+        document.getElementById('btn-print').addEventListener('click', () => {
+            window.print();
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+        dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('dragover'); });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) loadImage(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) loadImage(e.target.files[0]);
+        });
+
+        function loadImage(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('请上传图片文件！');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    currentImage = img;
+                    window.cutOffsets = []; // 重新加载新图片时重置切割偏移
+                    dropZone.style.display = 'none';
+                    controls.style.display = 'grid';
+                    actions.style.display = 'flex';
+                    previewSection.style.display = 'flex';
+                    triggerProcess();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 核心处理函数
+        function processImage() {
+            if (!currentImage) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = currentImage.width;
+            canvas.height = currentImage.height;
+            ctx.drawImage(currentImage, 0, 0);
+            
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+
+            const wPt = parseInt(whitePoint.value);
+            const bPt = parseInt(blackPoint.value);
+            const useSmart = smartProtect.checked;
+
+            let maskData = null;
+
+            // 智能保护原白底区域算法：分离粉笔字 + 保护试卷内部填补
+            if (useSmart) {
+                const scale = 5; 
+                const tw = Math.ceil(canvas.width / scale);
+                const th = Math.ceil(canvas.height / scale);
+                
+                const blockAlpha = new Float32Array(tw * th);
+                const blockW = new Int32Array(tw * th);
+                const blockB = new Int32Array(tw * th);
+                
+                for (let y = 0; y < canvas.height; y++) {
+                    for (let x = 0; x < canvas.width; x++) {
+                        let idx = (y * canvas.width + x) * 4;
+                        let L = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+                        let tx = Math.floor(x / scale);
+                        let ty = Math.floor(y / scale);
+                        let tidx = ty * tw + tx;
+                        
+                        if (L > 220) blockAlpha[tidx] += 1;
+                        if (L > 150) blockW[tidx] += 1;
+                        if (L < 100) blockB[tidx] += 1;
+                    }
+                }
+
+                const tCanvas = document.createElement('canvas');
+                tCanvas.width = tw;
+                tCanvas.height = th;
+                const tCtx = tCanvas.getContext('2d');
+                const tImgData = tCtx.createImageData(tw, th);
+                
+                const area = scale * scale;
+                const threshold = 0.5; // 原始判断白色的严苛度阈值
+                const r = Math.ceil(30 / scale); // 环境判定半径 30 像素
+
+                for (let y = 0; y < th; y++) {
+                    for (let x = 0; x < tw; x++) {
+                        let i = y * tw + x;
+                        let isPaper = (blockAlpha[i] / area) > threshold;
+                        
+                        // 过滤脱节的粉笔字：如果该块初步判定为局部白，但大环境背景是黑(黑板)，就剥离取消保护
+                        if (isPaper) {
+                            let sumW = 0, sumB = 0;
+                            let minY = Math.max(0, y - r);
+                            let maxY = Math.min(th - 1, y + r);
+                            let minX = Math.max(0, x - r);
+                            let maxX = Math.min(tw - 1, x + r);
+                            
+                            for (let ny = minY; ny <= maxY; ny++) {
+                                for (let nx = minX; nx <= maxX; nx++) {
+                                    let ni = ny * tw + nx;
+                                    sumW += blockW[ni];
+                                    sumB += blockB[ni];
+                                }
+                            }
+                            
+                            // 黑多白少（黑板上的粉笔字特征）：取消误判为白纸
+                            // 注意：对于一个完美的 90 度直角纸张边界，由于占据了探测圆的约 1/4，sumB 会是 sumW 的约 2.44 倍。
+                            // 为了不把纸张的直角当作粉笔字误伤切割掉（导致四个角有黑色毛边），这里的容忍倍数必须大于 2.44！
+                            // 我们将其设为 2.5，这样正常的粉笔字（占比远低于1/4）仍然会被精准剔除，而完美的直角将被完美保留。
+                            if (sumB > sumW * 2.5) {
+                                isPaper = false; 
+                            }
+                        }
+                        
+                        let val = isPaper ? 255 : 0;
+                        tImgData.data[i*4] = val;
+                        tImgData.data[i*4+1] = val;
+                        tImgData.data[i*4+2] = val;
+                        tImgData.data[i*4+3] = 255;
+                    }
+                }
+
+                // 算法增强：横向填补空隙（将试题纸中间的黑字纵队内部无缝连为一体，但对边缘不起到任何向外膨胀的效果）
+                const gapH = Math.ceil(300 / scale); 
+                for (let y = 0; y < th; y++) {
+                    let lastLight = -1000;
+                    for (let x = 0; x < tw; x++) {
+                        let idx = (y * tw + x) * 4;
+                        if (tImgData.data[idx] > 128) {
+                            if (x - lastLight <= gapH && x - lastLight > 1) {
+                                for(let k = lastLight + 1; k < x; k++) {
+                                    let kIdx = (y * tw + k) * 4;
+                                    tImgData.data[kIdx] = 255;
+                                    tImgData.data[kIdx+1] = 255;
+                                    tImgData.data[kIdx+2] = 255;
+                                }
+                            }
+                            lastLight = x;
+                        }
+                    }
+                }
+
+                // 算法增强：纵向填补空隙（跨越试题的横向多行列间距）
+                const gapV = Math.ceil(150 / scale); 
+                for (let x = 0; x < tw; x++) {
+                    let lastLight = -1000;
+                    for (let y = 0; y < th; y++) {
+                        let idx = (y * tw + x) * 4;
+                        if (tImgData.data[idx] > 128) {
+                            if (y - lastLight <= gapV && y - lastLight > 1) {
+                                for(let k = lastLight + 1; k < y; k++) {
+                                    let kIdx = (k * tw + x) * 4;
+                                    tImgData.data[kIdx] = 255;
+                                    tImgData.data[kIdx+1] = 255;
+                                    tImgData.data[kIdx+2] = 255;
+                                }
+                            }
+                            lastLight = y;
+                        }
+                    }
+                }
+                
+                tCtx.putImageData(tImgData, 0, 0);
+
+                // 画回原尺寸画布（自动利用浏览器的双线性插值实现自然柔滑的 5 像素原生渐变过渡，没有任何多余的向外多圈扩张黑边）
+                const mCanvas = document.createElement('canvas');
+                mCanvas.width = canvas.width;
+                mCanvas.height = canvas.height;
+                const mCtx = mCanvas.getContext('2d', { willReadFrequently: true });
+                mCtx.imageSmoothingEnabled = true;
+                mCtx.imageSmoothingQuality = 'high';
+                mCtx.drawImage(tCanvas, 0, 0, tw, th, 0, 0, canvas.width, canvas.height);
+                
+                maskData = mCtx.getImageData(0, 0, canvas.width, canvas.height).data;
+            }
+
+            // 遍历像素进行反色与调色
+            let range = (wPt - bPt) || 1; 
+
+            for (let i = 0; i < data.length; i += 4) {
+                let r = data[i];
+                let g = data[i+1];
+                let b = data[i+2];
+
+                // 如果像素不被保护，计算它的反色和亮度伸缩效果
+                let ir = 255 - r;
+                let ig = 255 - g;
+                let ib = 255 - b;
+
+                ir = (ir - bPt) / range * 255;
+                ig = (ig - bPt) / range * 255;
+                ib = (ib - bPt) / range * 255;
+
+                ir = Math.max(0, Math.min(255, ir));
+                ig = Math.max(0, Math.min(255, ig));
+                ib = Math.max(0, Math.min(255, ib));
+
+                if (useSmart && maskData) {
+                    // mask中的R通道值代表该像素属于“原白底试卷”的权重 (0~255)
+                    let maskWeight = maskData[i] / 255.0; 
+                    
+                    // 如果权重=1(完全是试卷), 保持原色 r; 如果=0(完全是黑板), 使用反色 ir
+                    data[i]   = r * maskWeight + ir * (1 - maskWeight);
+                    data[i+1] = g * maskWeight + ig * (1 - maskWeight);
+                    data[i+2] = b * maskWeight + ib * (1 - maskWeight);
+                } else {
+                    data[i]   = ir;
+                    data[i+1] = ig;
+                    data[i+2] = ib;
+                }
+            }
+            
+            ctx.putImageData(imgData, 0, 0);
+
+            // 保存处理后的画布和默认A4高度
+            window.processedCanvas = canvas;
+            window.defaultSliceHeight = Math.floor(canvas.width * 1.4142);
+            
+            renderSlices();
+        }
+
+        function renderSlices() {
+            if (!window.processedCanvas) return;
+            const canvas = window.processedCanvas;
+            const sliceHeight = window.defaultSliceHeight;
+
+            slicesPreview.innerHTML = '';
+            printContainer.innerHTML = '';
+
+            let currentY = 0;
+            let pageIndex = 0;
+
+            while (currentY < canvas.height) {
+                let offset = window.cutOffsets[pageIndex] || 0;
+                let contentHeight = sliceHeight - offset;
+                let sh = Math.min(contentHeight, canvas.height - currentY);
+
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = canvas.width;
+                sliceCanvas.height = sliceHeight;
+                const sCtx = sliceCanvas.getContext('2d');
+
+                // 原背景色空白替代 (为白色)
+                sCtx.fillStyle = '#FFFFFF';
+                sCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
+
+                sCtx.drawImage(
+                    canvas, 
+                    0, currentY, canvas.width, sh, 
+                    0, 0, sliceCanvas.width, sh
+                );
+
+                const dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.85);
+
+                const previewImg = document.createElement('img');
+                previewImg.src = dataUrl;
+                slicesPreview.appendChild(previewImg);
+
+                const printImg = document.createElement('img');
+                printImg.src = dataUrl;
+                printImg.className = 'print-page';
+                printContainer.appendChild(printImg);
+
+                currentY += sh;
+
+                if (currentY < canvas.height) {
+                    const ctrl = document.createElement('div');
+                    ctrl.className = 'split-control';
+                    ctrl.innerHTML = `
+                        <span style="color: #D97706; font-weight: bold;">✂️ 切口调节</span>
+                        <button class="btn-micro" onclick="window.adjustCut(${pageIndex}, 50)">👆 缩进 50px</button>
+                        <button class="btn-micro" onclick="window.adjustCut(${pageIndex}, 10)">👆 缩进 10px</button>
+                        <button class="btn-micro" onclick="window.adjustCut(${pageIndex}, -10)">👇 延伸 10px</button>
+                        <button class="btn-micro" onclick="window.adjustCut(${pageIndex}, 'reset')">恢复</button>
+                        <span style="color: #6B7280; font-size: 12px; min-width: 60px;">(偏离: ${offset}px)</span>
+                    `;
+                    slicesPreview.appendChild(ctrl);
+                }
+                
+                pageIndex++;
+            }
+        }
+
+        window.adjustCut = function(index, change) {
+            if (!window.cutOffsets) window.cutOffsets = [];
+            if (!window.cutOffsets[index]) window.cutOffsets[index] = 0;
+            
+            if (change === 'reset') {
+                window.cutOffsets[index] = 0;
+            } else {
+                window.cutOffsets[index] += change;
+            }
+            
+            // 限制条件：内容不能超出A4原有比例，也不能太短导致页面空白太多
+            if (window.cutOffsets[index] < 0) window.cutOffsets[index] = 0;
+            if (window.cutOffsets[index] > window.defaultSliceHeight - 100) {
+                window.cutOffsets[index] = window.defaultSliceHeight - 100;
+            }
+            
+            renderSlices();
+        };
+    </script>
+</body>
+</html>
