@@ -1074,14 +1074,44 @@
                     dx, dy, drawW, drawH
                 );
 
-                sCtx.fillStyle = '#94A3B8';
-                const fontSize = Math.max(12, Math.floor(sliceCanvas.width * 0.025));
-                sCtx.font = `500 ${fontSize}px "Inter", system-ui, sans-serif`;
-                sCtx.textAlign = 'center';
-                const pageText = `—  ${pageIndex + 1}  /  ${totalPages}  —`;
+                // 新的优雅页码 UI：在底部居中画一个带边框的现代感药丸容器
+                const fontSize = Math.max(14, Math.floor(sliceCanvas.width * 0.016));
+                const bottomMargin = sliceCanvas.height * 0.02; // 固定距离底部 2% (约6mm安全边距，防物理打印机裁切)
+                sCtx.font = `600 ${fontSize}px "Inter", system-ui, sans-serif`;
                 
-                const pageNumY = sliceCanvas.height - (sliceCanvas.height * (1 - zoom) / 4);
-                sCtx.fillText(pageText, sliceCanvas.width / 2, pageNumY);
+                const pageText = `${pageIndex + 1} / ${totalPages}`;
+                const textMetrics = sCtx.measureText(pageText);
+                const textW = textMetrics.width;
+                const textH = fontSize; 
+                
+                const padX = textH * 1.2;
+                const padY = textH * 0.6;
+                const pillW = textW + padX * 2;
+                const pillH = textH + padY * 2;
+                
+                const pillX = (sliceCanvas.width - pillW) / 2;
+                const pillY = sliceCanvas.height - bottomMargin - pillH;
+
+                sCtx.beginPath();
+                if (sCtx.roundRect) {
+                    sCtx.roundRect(pillX, pillY, pillW, pillH, pillH / 2);
+                } else {
+                    const r = pillH / 2;
+                    sCtx.arc(pillX + r, pillY + r, r, Math.PI / 2, Math.PI * 1.5);
+                    sCtx.arc(pillX + pillW - r, pillY + r, r, Math.PI * 1.5, Math.PI / 2);
+                    sCtx.closePath();
+                }
+                sCtx.fillStyle = '#F8FAFC'; // slate-50 白灰底色
+                sCtx.fill();
+                
+                sCtx.strokeStyle = '#E2E8F0'; // slate-200 柔和边框
+                sCtx.lineWidth = Math.max(1.5, sliceCanvas.width * 0.0015);
+                sCtx.stroke();
+                
+                sCtx.fillStyle = '#475569'; // slate-600 文字颜色
+                sCtx.textAlign = 'center';
+                sCtx.textBaseline = 'middle';
+                sCtx.fillText(pageText, sliceCanvas.width / 2, pillY + pillH / 2 + textH * 0.06);
 
                 const dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.85);
 
