@@ -274,11 +274,14 @@
             overflow: hidden;
             user-select: none;
             -webkit-user-select: none;
+            box-sizing: border-box;
+            transition: padding 0.2s ease;
         }
         #full-image-preview {
             width: 100%;
             display: block;
             pointer-events: none;
+            height: auto;
         }
         .red-line {
             position: absolute;
@@ -291,16 +294,18 @@
             justify-content: center;
             align-items: center;
             box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+            touch-action: none;
         }
         .red-line::before {
             content: '';
             position: absolute;
-            top: -15px;
-            bottom: -15px;
+            top: -30px;
+            bottom: -30px;
             left: 0;
             right: 0;
             cursor: ns-resize;
             z-index: 11;
+            touch-action: none;
         }
         .red-line.dragging, .red-line.dragging::before {
             background: rgba(239, 68, 68, 0.1);
@@ -319,6 +324,11 @@
             gap: 6px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 12;
+            transition: opacity 0.2s ease;
+        }
+        .red-line.dragging .red-line-controls {
+            opacity: 0.15;
+            pointer-events: none;
         }
         .page-badge {
             background: #EF4444;
@@ -553,7 +563,17 @@
         });
         contentZoom.addEventListener('input', () => {
             zoomVal.textContent = contentZoom.value + '%';
+            window.updatePreviewMargins();
         });
+
+        window.updatePreviewMargins = function() {
+            const zoom = parseInt(document.getElementById('content-zoom').value);
+            const container = document.getElementById('preview-box');
+            if (container) {
+                const paddingPct = (100 - zoom) / 2;
+                container.style.padding = `0 ${paddingPct}%`;
+            }
+        };
         smartProtect.addEventListener('change', triggerProcess);
 
         document.getElementById('btn-reselect').addEventListener('click', () => {
@@ -842,6 +862,7 @@
             const pCtx = previewCanvas.getContext('2d');
             pCtx.drawImage(canvas, 0, 0, previewCanvas.width, previewCanvas.height);
             
+            window.updatePreviewMargins();
             renderRedLines();
         }
 
