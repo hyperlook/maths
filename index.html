@@ -187,6 +187,18 @@
             justify-content: center;
             gap: 16px;
             margin-bottom: 30px;
+            position: sticky;
+            top: 0;
+            background: var(--card-bg);
+            padding: 16px 0;
+            z-index: 100;
+            border-bottom: 1px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .actions.sticky {
+            border-bottom-color: #E5E7EB;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         button {
@@ -248,76 +260,127 @@
             background: #E5E7EB;
             padding: 20px 10px;
             border-radius: 8px;
-            max-height: 70vh;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch; /* Safari 流畅滚动 */
         }
 
-        #slices-preview img {
-            width: 100%;
-            max-width: 600px; 
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            background: white;
-        }
-
-        .cut-adjuster {
+        #preview-box {
+            position: relative;
             width: 100%;
             max-width: 600px;
-            background: #FFFFFF;
+            margin: 0 auto;
             border: 1px solid #E5E7EB;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-            margin: -5px 0;
-            position: relative;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: #FFF;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #full-image-preview {
+            width: 100%;
+            display: block;
+            pointer-events: none;
+        }
+        .red-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 0;
+            border-top: 2px dashed #EF4444; 
             z-index: 10;
-        }
-        .cut-adjuster-header {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
-            margin-bottom: 12px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
         }
-        .cut-val-group {
+        .red-line::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            bottom: -15px;
+            left: 0;
+            right: 0;
+            cursor: ns-resize;
+            z-index: 11;
+        }
+        .red-line.dragging, .red-line.dragging::before {
+            background: rgba(239, 68, 68, 0.1);
+            border-top-color: #DC2626;
+        }
+        .red-line-controls {
+            position: absolute;
+            right: 10px;
+            top: -20px;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            padding: 4px 8px;
             display: flex;
             align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 12;
+        }
+        .page-badge {
+            background: #EF4444;
+            color: white;
+            font-size: 11px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            white-space: nowrap;
         }
         .cut-val-badge {
-            background: #EEF2FF;
-            color: var(--primary);
-            padding: 4px 6px;
-            border-radius: 6px;
+            background: rgba(148, 163, 184, 0.1);
+            color: #475569;
+            padding: 2px 6px;
+            border-radius: 4px;
             font-family: monospace;
             font-size: 11px;
-            white-space: nowrap;
+            font-weight: 600;
         }
-        .cut-slider-wrap {
+        .btn-tiny {
+            height: 38px;
+            min-width: 44px;
+            padding: 0 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #64748B;
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 8px;
+            cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 12px;
-            width: 100%;
-        }
-        .cut-slider-wrap span {
-            font-size: 12px;
-            color: #9CA3AF;
+            justify-content: center;
+            transition: all 0.2s;
             white-space: nowrap;
         }
-        .btn-reset-cut {
-            padding: 4px 10px;
-            font-size: 12px;
-            color: #6B7280;
-            background: #F3F4F6;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 8px;
-            transition: background 0.2s;
+        .btn-tiny:active {
+            background: #F1F5F9;
+            transform: scale(0.95);
         }
-        .btn-reset-cut:hover {
-            background: #E5E7EB;
+        .btn-tiny.primary {
+            color: var(--primary);
+            border-color: rgba(79, 70, 229, 0.2);
+            background: rgba(79, 70, 229, 0.05);
+        }
+        .btn-tiny.reset {
+            color: #EF4444;
+            border-color: rgba(239, 68, 68, 0.2);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        @media (max-width: 500px) {
+            .btn-tiny {
+                min-width: 38px;
+                font-size: 11px;
+                padding: 0 4px;
+            }
+            .red-line-controls {
+                right: 4px;
+                top: -16px;
+                padding: 2px 4px;
+                gap: 4px;
+            }
         }
 
         #print-container {
@@ -343,9 +406,6 @@
             input[type=range]::-webkit-slider-thumb {
                 height: 24px; /* 加大触控点 */
                 width: 24px;
-            }
-            #slices-preview {
-                max-height: 60vh;
             }
         }
 
@@ -430,7 +490,7 @@
         </div>
 
         <div class="actions" id="actions">
-            <button class="btn-primary" id="btn-print">预览并开启打印</button>
+            <button class="btn-primary" id="btn-print">生成终稿并打印</button>
             <button class="btn-secondary" id="btn-reselect">重新选择图片</button>
         </div>
 
@@ -493,7 +553,6 @@
         });
         contentZoom.addEventListener('input', () => {
             zoomVal.textContent = contentZoom.value + '%';
-            renderSlices();
         });
         smartProtect.addEventListener('change', triggerProcess);
 
@@ -501,7 +560,7 @@
             fileInput.click();
         });
         document.getElementById('btn-print').addEventListener('click', () => {
-            window.print();
+            generateAndPrint();
         });
 
         dropZone.addEventListener('click', () => fileInput.click());
@@ -725,60 +784,19 @@
             window.processedCanvas = canvas;
             window.defaultSliceHeight = Math.floor(canvas.width * 1.4142);
             
-            renderSlices();
+            updatePreviewUI();
         }
 
-        function renderSlices() {
-            if (!window.processedCanvas) return;
+        window.absoluteCuts = []; 
+        function calculateCuts() {
+            window.absoluteCuts = [];
             const canvas = window.processedCanvas;
             const sliceHeight = window.defaultSliceHeight;
-            const zoom = parseInt(document.getElementById('content-zoom').value) / 100;
-
-            const safeOffsetLimit = Math.max(0, sliceHeight - 100);
-
-            // 预计算总页数
-            let totalPages = 0;
-            let ty = 0;
-            while (ty < canvas.height && totalPages < 1000) { // 防止死循环保护
-                let offset = window.cutOffsets[totalPages] || 0;
-                let maxOfs = Math.min(600, sliceHeight - 200); 
-                if (offset > maxOfs) offset = maxOfs;
-                let contentHeight = sliceHeight - offset;
-                if (contentHeight < 100) contentHeight = 100;
-                
-                let sh = Math.min(contentHeight, canvas.height - ty);
-                if (sh <= 0) break;
-                ty += sh;
-                totalPages++;
-            }
-
             let currentY = 0;
             let pageIndex = 0;
-
-            // DOM复用结构以支持无缝滑动
-            let sliceChildIdx = { val: 0 };
-            let printChildIdx = { val: 0 };
-
-            const getEl = (id, tag, parent, idxRef) => {
-                let el = document.getElementById(id);
-                if (!el) {
-                    el = document.createElement(tag);
-                    el.id = id;
-                }
-                if (parent.children[idxRef.val] !== el) {
-                    parent.insertBefore(el, parent.children[idxRef.val] || null);
-                }
-                idxRef.val++;
-                return el;
-            };
-
-            let validSliceIds = new Set();
-            let validPrintIds = new Set();
-
             while (currentY < canvas.height && pageIndex < 1000) {
                 let offset = window.cutOffsets[pageIndex] || 0;
-                let maxOffset = Math.min(600, sliceHeight - 200); 
-                
+                let maxOffset = sliceHeight - 200; 
                 if (offset > maxOffset) offset = maxOffset;
                 if (offset < 0) offset = 0;
                 window.cutOffsets[pageIndex] = offset;
@@ -786,23 +804,248 @@
                 let contentHeight = sliceHeight - offset;
                 if (contentHeight < 100) contentHeight = 100;
                 
+                currentY += contentHeight;
+                if (currentY < canvas.height) {
+                    window.absoluteCuts.push({
+                        y: currentY,
+                        index: pageIndex,
+                        offset: offset,
+                        maxOffset: maxOffset
+                    });
+                }
+                pageIndex++;
+            }
+        }
+
+        function updatePreviewUI() {
+            if (!window.processedCanvas) return;
+            const canvas = window.processedCanvas;
+            
+            let container = document.getElementById('preview-box');
+            if (!container) {
+                slicesPreview.innerHTML = '';
+                container = document.createElement('div');
+                container.id = 'preview-box';
+                
+                const previewCanvas = document.createElement('canvas');
+                previewCanvas.id = 'full-image-preview';
+                
+                container.appendChild(previewCanvas);
+                slicesPreview.appendChild(container);
+            }
+            
+            const previewCanvas = document.getElementById('full-image-preview');
+            const previewWidth = Math.min(canvas.width, 800);
+            const scale = previewWidth / canvas.width;
+            previewCanvas.width = previewWidth;
+            previewCanvas.height = Math.floor(canvas.height * scale);
+            const pCtx = previewCanvas.getContext('2d');
+            pCtx.drawImage(canvas, 0, 0, previewCanvas.width, previewCanvas.height);
+            
+            renderRedLines();
+        }
+
+        function renderRedLines() {
+            const container = document.getElementById('preview-box');
+            if (!container) return;
+
+            calculateCuts();
+            const canvas = window.processedCanvas;
+            
+            const existingLines = Array.from(container.querySelectorAll('.red-line'));
+            const validLineIds = new Set();
+
+            window.absoluteCuts.forEach(cut => {
+                const id = `red-line-${cut.index}`;
+                validLineIds.add(id);
+                let line = document.getElementById(id);
+                
+                const pct = (cut.y / canvas.height) * 100;
+
+                if (!line) {
+                    line = document.createElement('div');
+                    line.id = id;
+                    line.className = 'red-line';
+                    line.innerHTML = `
+                        <div class="red-line-controls">
+                            <span class="page-badge">第 ${cut.index + 1} 页尾</span>
+                            <span class="cut-val-badge" id="badge-${cut.index}" style="background:#FFF">缩进 ${cut.offset}px</span>
+                            <button class="btn-tiny" onclick="window.updateShift(${cut.index}, -5)">下5</button>
+                            <button class="btn-tiny primary" onclick="window.updateShift(${cut.index}, 5)">上5</button>
+                            <button class="btn-tiny primary" onclick="window.updateShift(${cut.index}, 50)">上50</button>
+                            <button class="btn-tiny reset" onclick="window.resetShift(${cut.index})">↺</button>
+                        </div>
+                    `;
+                    
+                    let isDragging = false;
+                    let startClientY = 0;
+                    let startOffset = 0;
+                    
+                    line.addEventListener('pointerdown', (e) => {
+                        if (e.target.tagName.toLowerCase() === 'button') return;
+                        e.preventDefault();
+                        isDragging = true;
+                        startClientY = e.clientY;
+                        startOffset = window.cutOffsets[cut.index] || 0;
+                        line.classList.add('dragging');
+                        line.setPointerCapture(e.pointerId);
+                    });
+
+                    line.addEventListener('pointermove', (e) => {
+                        if (!isDragging) return;
+                        e.preventDefault();
+                        const deltaClientY = e.clientY - startClientY;
+                        const scale = canvas.height / container.clientHeight;
+                        const deltaY = deltaClientY * scale;
+                        
+                        let newOffset = Math.round(startOffset - deltaY);
+                        newOffset = Math.max(0, Math.min(cut.maxOffset, newOffset));
+                        window.cutOffsets[cut.index] = newOffset;
+                        
+                        if (window.liveUpdateFrame) cancelAnimationFrame(window.liveUpdateFrame);
+                        window.liveUpdateFrame = requestAnimationFrame(() => {
+                            renderRedLines(); 
+                        });
+                    });
+
+                    const endDrag = (e) => {
+                        if (!isDragging) return;
+                        isDragging = false;
+                        line.classList.remove('dragging');
+                        line.releasePointerCapture(e.pointerId);
+                    };
+                    line.addEventListener('pointerup', endDrag);
+                    line.addEventListener('pointercancel', endDrag);
+
+                    container.appendChild(line);
+                }
+
+                line.style.top = pct + '%';
+                document.getElementById(`badge-${cut.index}`).innerText = `缩进 ${cut.offset}px`;
+            });
+
+            const lastPageLabelId = 'last-page-label';
+            let lastPageLabel = document.getElementById(lastPageLabelId);
+            if (!lastPageLabel) {
+                lastPageLabel = document.createElement('div');
+                lastPageLabel.id = lastPageLabelId;
+                lastPageLabel.style.position = 'absolute';
+                lastPageLabel.style.bottom = '10px';
+                lastPageLabel.style.right = '10px';
+                lastPageLabel.style.background = 'rgba(79, 70, 229, 0.8)';
+                lastPageLabel.style.color = 'white';
+                lastPageLabel.style.padding = '4px 8px';
+                lastPageLabel.style.borderRadius = '4px';
+                lastPageLabel.style.fontSize = '12px';
+                lastPageLabel.style.fontWeight = 'bold';
+                lastPageLabel.style.zIndex = '5';
+                container.appendChild(lastPageLabel);
+            }
+            let totalPagesPreview = window.absoluteCuts.length;
+            if (totalPagesPreview === 0 || window.absoluteCuts[totalPagesPreview - 1].y < canvas.height) {
+                totalPagesPreview += 1;
+            }
+            lastPageLabel.innerText = `最终到底：第 ${totalPagesPreview} 页`;
+
+            existingLines.forEach(line => {
+                if (!validLineIds.has(line.id)) {
+                    line.remove();
+                }
+            });
+        }
+
+        window.updateShift = function(index, delta) {
+            calculateCuts(); 
+            const cut = window.absoluteCuts.find(c => c.index === index);
+            if (!cut) return;
+            const current = window.cutOffsets[index] || 0;
+            let newOffset = current + delta;
+            newOffset = Math.max(0, Math.min(cut.maxOffset, newOffset));
+            window.cutOffsets[index] = newOffset;
+            renderRedLines();
+        };
+
+        window.resetShift = function(index) {
+            window.cutOffsets[index] = 0;
+            renderRedLines();
+        };
+
+        async function generateAndPrint() {
+            if (!window.processedCanvas) return;
+            const canvas = window.processedCanvas;
+            const sliceHeight = window.defaultSliceHeight;
+            const zoom = parseInt(document.getElementById('content-zoom').value) / 100;
+            
+            let loadingOverlay = document.getElementById('loading-overlay');
+            if(!loadingOverlay) {
+                loadingOverlay = document.createElement('div');
+                loadingOverlay.id = 'loading-overlay';
+                loadingOverlay.innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center;">
+                        <div class="loading" style="display:block; margin-bottom:15px; font-size:20px;">⏳</div>
+                        <h3 id="progress-text" style="color:var(--primary); font-size: 18px; margin: 0;">正在生成高清打印文件...</h3>
+                        <p style="margin-top: 10px; color:#6B7280; font-size:14px;">请勿刷新页面或切换后台</p>
+                    </div>
+                `;
+                loadingOverlay.style.position = 'fixed';
+                loadingOverlay.style.top = '0';
+                loadingOverlay.style.left = '0';
+                loadingOverlay.style.width = '100vw';
+                loadingOverlay.style.height = '100vh';
+                loadingOverlay.style.backgroundColor = 'rgba(0,0,0,0.6)';
+                loadingOverlay.style.display = 'flex';
+                loadingOverlay.style.alignItems = 'center';
+                loadingOverlay.style.justifyContent = 'center';
+                loadingOverlay.style.zIndex = '9999';
+                document.body.appendChild(loadingOverlay);
+            }
+            loadingOverlay.style.display = 'flex';
+            
+            const progressText = document.getElementById('progress-text');
+            printContainer.innerHTML = '';
+            
+            let totalPages = 0;
+            let tempY = 0;
+            while (tempY < canvas.height && totalPages < 1000) {
+                let offset = window.cutOffsets[totalPages] || 0;
+                let maxOffset = sliceHeight - 200; 
+                if (offset > maxOffset) offset = maxOffset;
+                let contentHeight = Math.max(100, sliceHeight - offset);
+                let sh = Math.min(contentHeight, canvas.height - tempY);
+                if (sh <= 0) break;
+                tempY += sh;
+                totalPages++;
+            }
+
+            let currentY = 0;
+            let pageIndex = 0;
+
+            while (currentY < canvas.height && pageIndex < 1000) {
+                progressText.innerText = `正在生成高清打印文件... (${pageIndex + 1}/${totalPages})`;
+                await new Promise(r => setTimeout(r, 50)); 
+                
+                let offset = window.cutOffsets[pageIndex] || 0;
+                let maxOffset = sliceHeight - 200; 
+                if (offset > maxOffset) offset = maxOffset;
+                let contentHeight = Math.max(100, sliceHeight - offset);
                 let sh = Math.min(contentHeight, canvas.height - currentY);
                 if (sh <= 0) break;
-
+                
+                const MAX_WIDTH = 1600;
+                const renderScale = canvas.width > MAX_WIDTH ? MAX_WIDTH / canvas.width : 1;
+                
                 const sliceCanvas = document.createElement('canvas');
-                sliceCanvas.width = canvas.width;
-                sliceCanvas.height = sliceHeight;
+                sliceCanvas.width = canvas.width * renderScale;
+                sliceCanvas.height = sliceHeight * renderScale; 
                 const sCtx = sliceCanvas.getContext('2d');
 
-                // 原背景色空白替代 (为白色)
                 sCtx.fillStyle = '#FFFFFF';
                 sCtx.fillRect(0, 0, sliceCanvas.width, sliceCanvas.height);
 
-                // 缩放计算
                 const drawW = sliceCanvas.width * zoom;
-                const drawH = sh * zoom;
+                const drawH = sh * renderScale * zoom;
                 const dx = (sliceCanvas.width - drawW) / 2;
-                const dy = (sliceHeight - drawH) / 2;
+                const dy = (sliceCanvas.height * (1 - zoom)) / 2;
 
                 sCtx.drawImage(
                     canvas, 
@@ -810,101 +1053,54 @@
                     dx, dy, drawW, drawH
                 );
 
-                // 绘制漂亮的页码
-                sCtx.fillStyle = '#94A3B8'; // 优雅的灰蓝色
+                sCtx.fillStyle = '#94A3B8';
                 const fontSize = Math.max(12, Math.floor(sliceCanvas.width * 0.025));
                 sCtx.font = `500 ${fontSize}px "Inter", system-ui, sans-serif`;
                 sCtx.textAlign = 'center';
                 const pageText = `—  ${pageIndex + 1}  /  ${totalPages}  —`;
                 
-                // 页码位置：底部留白的中心
                 const pageNumY = sliceCanvas.height - (sliceCanvas.height * (1 - zoom) / 4);
                 sCtx.fillText(pageText, sliceCanvas.width / 2, pageNumY);
 
                 const dataUrl = sliceCanvas.toDataURL('image/jpeg', 0.85);
 
-                let imgEl = getEl(`slice-img-${pageIndex}`, 'img', slicesPreview, sliceChildIdx);
-                imgEl.className = 'slice-preview-img';
-                imgEl.src = dataUrl;
-                validSliceIds.add(imgEl.id);
-
-                let printImg = getEl(`print-img-${pageIndex}`, 'img', printContainer, printChildIdx);
+                let printImg = document.createElement('img');
                 printImg.className = 'print-page';
                 printImg.src = dataUrl;
-                validPrintIds.add(printImg.id);
+                printContainer.appendChild(printImg);
+
+                // 确保新插入的DOM图片被浏览器主线程和布局引擎完全解析
+                await new Promise(resolve => {
+                    if (printImg.complete) {
+                        resolve();
+                    } else {
+                        printImg.onload = resolve;
+                        printImg.onerror = resolve;
+                    }
+                });
 
                 currentY += sh;
-
-                if (currentY < canvas.height) {
-                    let adjEl = getEl(`cut-adj-${pageIndex}`, 'div', slicesPreview, sliceChildIdx);
-                    validSliceIds.add(adjEl.id);
-                    adjEl.className = 'cut-adjuster';
-                    
-                    if (!adjEl.hasAttribute('data-init')) {
-                        adjEl.innerHTML = `
-                            <div class="cut-adjuster-header">
-                                <span>✂️ 调整切口</span>
-                                <div class="cut-val-group">
-                                    <span class="cut-val-badge" id="cut-badge-${pageIndex}">偏离:${offset}px</span>
-                                    <button class="btn-reset-cut" onclick="window.resetCut(${pageIndex})">重置</button>
-                                </div>
-                            </div>
-                            <div class="cut-slider-wrap">
-                                <span>往下</span>
-                                <input type="range" id="cut-slider-${pageIndex}" style="flex: 1;" min="0" max="${maxOffset}" value="${offset}" 
-                                       oninput="window.liveCutUpdate(${pageIndex}, this.value)">
-                                <span>往上</span>
-                            </div>
-                        `;
-                        adjEl.setAttribute('data-init', 'true');
-                    } else {
-                        document.getElementById(`cut-badge-${pageIndex}`).textContent = `偏离:${offset}px`;
-                        let slider = document.getElementById(`cut-slider-${pageIndex}`);
-                        slider.max = maxOffset;
-                        if (document.activeElement !== slider) {
-                            slider.value = offset;
-                        }
-                    }
-                }
-                
                 pageIndex++;
             }
             
-            // 清理多余的旧节点
-            Array.from(slicesPreview.children).forEach(child => {
-                if (!validSliceIds.has(child.id)) {
-                    slicesPreview.removeChild(child);
-                }
-            });
-            Array.from(printContainer.children).forEach(child => {
-                if (!validPrintIds.has(child.id)) {
-                    printContainer.removeChild(child);
-                }
-            });
+            // 额外稍作停顿，彻底保证所有渲染帧提交后再调打印
+            await new Promise(r => setTimeout(r, 600));
+            
+            loadingOverlay.style.display = 'none';
+            window.print();
         }
 
-        let liveUpdateFrame = null;
-        window.liveCutUpdate = function(index, value) {
-            const val = parseInt(value);
-            window.cutOffsets[index] = val;
-            
-            const badge = document.getElementById(`cut-badge-${index}`);
-            if (badge) badge.textContent = `偏离:${val}px`;
-            
-            if (liveUpdateFrame) cancelAnimationFrame(liveUpdateFrame);
-            liveUpdateFrame = requestAnimationFrame(() => {
-                renderSlices();
-            });
-        };
-
-        window.applyCut = function() {
-            renderSlices();
-        };
-
-        window.resetCut = function(index) {
-            window.cutOffsets[index] = 0;
-            renderSlices();
-        };
+        window.addEventListener('scroll', () => {
+            const actions = document.getElementById('actions');
+            if (actions.style.display === 'flex') {
+                const rect = actions.getBoundingClientRect();
+                if (rect.top <= 0) {
+                    actions.classList.add('sticky');
+                } else {
+                    actions.classList.remove('sticky');
+                }
+            }
+        });
     </script>
 </body>
 </html>
